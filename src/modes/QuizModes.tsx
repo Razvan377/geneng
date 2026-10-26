@@ -1,4 +1,4 @@
-/** Modes 2–5: generic quiz runner plus each mode's configuration. */
+/** Generated-question modes: a generic quiz runner plus each mode's configuration. */
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { QuestionCard } from '../components/QuestionCard';
@@ -10,6 +10,10 @@ import { pointsFor } from '../quiz/grade';
 import { KIND_LABELS, MODES, type ModeId } from '../quiz/kinds';
 import { generateNumbersQuestion, NUMBERS_KINDS } from '../quiz/numbersQuestions';
 import { BROWN_PRIMER, generatePcrQuestion, PCR_KINDS, tmWorking } from '../quiz/pcrQuestions';
+import { BLOT_KINDS, generateBlotQuestion } from '../quiz/blotQuestions';
+import { CLONING_KINDS, generateCloningQuestion } from '../quiz/cloningQuestions';
+import { EXPRESSION_KINDS, generateExpressionQuestion } from '../quiz/expressionQuestions';
+import { FUNCTIONAL_KINDS, generateFunctionalQuestion } from '../quiz/functionalQuestions';
 import type { Grade, Question } from '../quiz/types';
 import { randomSeed } from '../science/rng';
 import { useProgress } from '../state/ProgressContext';
@@ -49,9 +53,9 @@ function QuizMode({ mode, kinds, generate, aside }: QuizModeProps) {
   const question = useMemo(() => (seed ? generate(seed, kind) : null), [seed, kind, generate]);
   if (!seed || !question) return null;
 
-  const onAnswered = (g: Grade) => {
+  const onAnswered = (g: Grade, partKind: string) => {
     const points = pointsFor(g, progress.streak);
-    record({ kind: question.kind, correct: g.correct, points });
+    record({ kind: partKind, correct: g.correct, points });
     setSession((s) => ({ answered: s.answered + 1, correct: s.correct + (g.correct ? 1 : 0) }));
     return points;
   };
@@ -92,6 +96,10 @@ const generators = {
   pcr: (s: string, k?: string) => generatePcrQuestion(s, k as never),
   gel: (s: string, k?: string) => generateGelQuestion(s, k as never),
   num: (s: string, k?: string) => generateNumbersQuestion(s, k as never),
+  blot: (s: string, k?: string) => generateBlotQuestion(s, k as never),
+  clone: (s: string, k?: string) => generateCloningQuestion(s, k as never),
+  expr: (s: string, k?: string) => generateExpressionQuestion(s, k as never),
+  func: (s: string, k?: string) => generateFunctionalQuestion(s, k as never),
 };
 
 export function EndsMode() {
@@ -124,4 +132,39 @@ export function GelMode() {
 
 export function NumbersMode() {
   return <QuizMode mode="num" kinds={NUMBERS_KINDS} generate={generators.num} />;
+}
+
+export function BlotsMode() {
+  return (
+    <QuizMode
+      mode="blot"
+      kinds={BLOT_KINDS}
+      generate={generators.blot}
+      aside={
+        <details className="card worked-example">
+          <summary>
+            <strong>How to reason about each blot</strong>
+          </summary>
+          <ul className="plain-list" style={{ marginTop: 8 }}>
+            <li><strong>Southern</strong> (genomic DNA + enzyme + probe): the band is the whole restriction fragment that contains the probe. Introns count; splicing never matters.</li>
+            <li><strong>Northern</strong> (RNA + probe): mRNA length = all exons, UTRs included. No band if the probe's exon is not in the mRNA, or if there is no transcription.</li>
+            <li><strong>RT-PCR</strong>: cDNA from the 5′ end of the forward primer to the 5′ end of the reverse primer, introns excluded. No product if a primer's exon is missing.</li>
+            <li><strong>Western</strong> (protein + antibody): aa × 110 Da. Skipping or deleting a length that is not a multiple of 3 shifts the frame: a premature stop, and a C-terminal epitope is lost.</li>
+          </ul>
+        </details>
+      }
+    />
+  );
+}
+
+export function CloningMode() {
+  return <QuizMode mode="clone" kinds={CLONING_KINDS} generate={generators.clone} />;
+}
+
+export function ExpressionMode() {
+  return <QuizMode mode="expr" kinds={EXPRESSION_KINDS} generate={generators.expr} />;
+}
+
+export function FunctionalMode() {
+  return <QuizMode mode="func" kinds={FUNCTIONAL_KINDS} generate={generators.func} />;
 }

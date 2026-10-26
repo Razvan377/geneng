@@ -12,6 +12,19 @@ in `localStorage`, and the app still works if storage is blocked.
 | **4 · PCR calculator** | Wallace-rule Tm and annealing temperature, spotting bad primer pairs, 2ⁿ amplification, product length, reverse primers, primers that add restriction sites. |
 | **5 · Numbers drill** | 4ⁿ site frequency, enzyme units, A260 quantification and A260/A280 purity, Clarke–Carbon library size, vector capacities. |
 | **6 · True / false** | Exam statements in Spanish from `src/data/statements.json`, with trap words highlighted after answering. |
+| **Blots & variants** | Draw the expected Southern (EcoRI + probe), Northern, RT-PCR and Western results for a gene and its variants (intron loss, exon skipping, nonsense, in-frame/frameshift deletions, insertions, EcoRI-site loss, promoter deletion); isoform Northerns with two probes; Southern blots of a restriction map; Western blots of mutants. |
+| **Cloning strategy** | Which enzymes cut inside the gene, pUC18 vs pUC19 orientation under Plac, rescuing wrong-order sites by blunting (Klenow / T4 DNA pol / S1), selection and blue/white screening (also with an AmpR host), primers for a gene drawn right-to-left, NdeI to keep the RBS–ATG distance. |
+| **Expression & purification** | Host from vector elements (E. coli, S. cerevisiae, S. pombe, Pichia, mammalian), inducers (IPTG, λDE3, cI857, arabinose, galactose, thiamine, methanol), tags + matrix + elution + protease, cloning in frame with a tag (computed from sequences), SDS-PAGE lane matching for a GST/MBP purification, tag vs protein antibodies, troubleshooting, cell-free expression. |
+| **Functional analysis** | Yeast two-hybrid (strain, autoactivation and interaction plates, domain mapping), CRISPR knockout screens, RNAi target validation, luciferase promoter bashing, recognising techniques (qPCR, Western + loading control, immunofluorescence/DAPI…). |
+
+The Gel mode also has DNA quantification by band intensity against a marker dilution series, and the Numbers drill
+has enzyme units corrected for site density (units defined on λ DNA). These problem types follow the course problem
+sets (cloning problems, lessons 1–2, Northern/Southern/Western problems 1–3, techniques 4–8, functional 9–10,
+expression vectors 11–14).
+
+**New answer formats.** *Draw the blot*: type the band sizes of every lane (or “No band”) and see your blot drawn
+next to the expected one. *Match*: assign samples to lanes. *Case problems*: one scenario, several parts answered in
+turn (for example the four blots of the same gene).
 
 Every question shows the reasoning, not just right/wrong. Points, streaks, per-mode accuracy and a
 **weak spots** screen track what to practise next.
@@ -69,6 +82,8 @@ src/
     pcr.ts            Wallace Tm, primer checks, amplification, PCR product, cloning primers
     numbers.ts        4ⁿ, enzyme units, A260, Clarke–Carbon, vector capacities, number parsing
     ends.ts           sticky/blunt ends, ligation, hybrid sites, schizomers, directional cloning, phosphatase
+    geneModel.ts      exons/introns/UTRs, EcoRI sites, probe, primers, epitope; variants → Southern/Northern/RT-PCR/Western
+    translate.ts      genetic code, translation, 110 Da per amino acid
   quiz/             Question generators for modes 2–6, grading, scoring, statements loader
   state/            Safe localStorage wrapper, progress (points, streaks, stats)
   components/       Gel, map editor, question card, visuals (SVG)
@@ -88,6 +103,8 @@ src/
 - **Coverage**: a 2×10⁹ bp genome with 2×10⁴ bp inserts needs ≈ 4.6×10⁵ clones for 99%, and 10⁵ clones gives ≈ 63%.
 - **Ends**: the BamHI/BglII hybrid site is cut by neither enzyme but still by Sau3AI. Ligation compatibility is also checked against a strand-level rule for every pair of enzymes in the table.
 - **Question generators**: every generator produces well-formed, reproducible questions for many seeds, and its answer agrees with an independent computation.
+- **Gene variants** (fixture: the OMG1 problem, CDS 300 + 600 + 501 = 1401 nt → 466 aa ≈ 51.3 kDa): intron loss only changes the Southern fragment, in-frame exon skipping removes exon/3 amino acids, skipping or deleting a length that is not a multiple of 3 loses a C-terminal epitope (real translation finds the new stop), nonsense codons truncate, losing an EcoRI site merges fragments, promoter deletion abolishes RNA and protein but not the Southern band.
+- **Reading frame**: the site offered as correct really puts the cDNA ATG a multiple of 3 after the tag ATG with no stop in between; pUC18/pUC19 orientation; the Lesson 2 unit problem gives 5 U.
 
 ### How the solver works
 

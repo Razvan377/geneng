@@ -1,16 +1,21 @@
 /**
- * Virtual agarose gel, drawn as SVG. Dark gel, glowing orange bands, wells at the top.
- * Band position comes from the migration model (∝ log10 size) unless a lane supplies explicit
- * positions; brightness is proportional to band mass (size × copies).
+ * Virtual gel or blot, drawn as SVG. Three looks: a dark agarose gel with glowing orange bands,
+ * an autoradiography/ECL film (Southern, Northern, Western: dark bands on a pale membrane) and a
+ * Coomassie-stained SDS-PAGE gel. Band position comes from the migration model (∝ log10 size)
+ * unless a lane supplies explicit positions; intensity is proportional to band mass unless given.
  */
 
 import { useId, useState } from 'react';
 import { bandIntensity, migrate, type Band, type MigrationModel } from '../science/gel';
 import { useElementWidth } from '../lib/hooks';
 
+export type GelLook = 'agarose' | 'film' | 'coomassie';
+
 export interface GelBand extends Band {
   /** Explicit position as a fraction of the running length (overrides the model). */
   position?: number;
+  /** Explicit intensity 0–1 (overrides the mass-based one). */
+  intensity?: number;
   /** Tooltip text for inspectable lanes. */
   info?: string;
 }
@@ -39,12 +44,13 @@ interface Props {
   /** Draw a millimetre ruler for a gel of this running length (mm). */
   rulerMm?: number;
   height?: number;
+  look?: GelLook;
 }
 
 const LABEL_H = 22;
 const WELL_H = 6;
 
-export function Gel({ lanes, model, ariaLabel, ladderLabels, ladderUnit, rulerMm, height }: Props) {
+export function Gel({ lanes, model, ariaLabel, ladderLabels, ladderUnit, rulerMm, height, look = 'agarose' }: Props) {
   const [ref, width] = useElementWidth<HTMLDivElement>(360);
   const [tip, setTip] = useState<{ x: number; y: number; text: string } | null>(null);
   const uid = useId().replace(/:/g, '');
@@ -82,7 +88,7 @@ export function Gel({ lanes, model, ariaLabel, ladderLabels, ladderUnit, rulerMm
   }
 
   return (
-    <div className="gel" ref={ref} onPointerLeave={() => setTip(null)}>
+    <div className={`gel gel--${look}`} ref={ref} onPointerLeave={() => setTip(null)}>
       <svg
         width={svgW}
         height={svgH}
@@ -146,11 +152,9 @@ export function Gel({ lanes, model, ariaLabel, ladderLabels, ladderUnit, rulerMm
                 const frac = b.position ?? migrate(model, b.apparentSize);
                 if (frac > 1.03) return null; // ran off the gel
                 const y = runTop + frac * runH;
-                const intensity = lane.ladder
-                  ? b.size === lane.reference
-                    ? 0.95
-                    : 0.6
-                  : bandIntensity(b.mass, maxMass);
+                const intensity =
+                  b.intensity ??
+                  (lane.ladder ? (b.size === lane.reference ? 0.95 : 0.6) : bandIntensity(b.mass, maxMass));
                 const h = 2.2 + 3.4 * intensity;
                 return (
                   <g key={j}>

@@ -3,6 +3,10 @@ import { AGAROSE_TABLE, agaroseModel, LADDERS } from '../../science/gel';
 import { formatSize } from '../../quiz/gelQuestions';
 import type { Visual } from '../../quiz/types';
 import { Gel } from '../Gel';
+import { BlotView } from './BlotView';
+import { GeneDiagram } from './GeneDiagram';
+import { BarsChart, TableView, VectorView } from './Misc';
+import { ProbeMap } from './ProbeMap';
 import { CloningDiagram } from './CloningDiagram';
 import { DnaEnds } from './DnaEnds';
 import { SequenceView } from './SequenceView';
@@ -102,6 +106,26 @@ export function VisualView({ visual, guessBp = null }: Props) {
           unknownBp={visual.unknownBp}
           guessBp={guessBp}
         />
+      );
+    case 'gene':
+      return <GeneDiagram gene={visual.gene} markers={visual.markers} show={visual.show} />;
+    case 'probeMap':
+      return <ProbeMap length={visual.length} sites={visual.sites} probe={visual.probe} regionLabel={visual.regionLabel} arrow={visual.arrow} />;
+    case 'vector':
+      return <VectorView name={visual.name} features={visual.features} />;
+    case 'bars':
+      return <BarsChart unit={visual.unit} bars={visual.bars} reference={visual.reference} caption={visual.caption} />;
+    case 'blot':
+      return <BlotView look={visual.look} unit={visual.unit} ladder={visual.ladder} lanes={visual.lanes} caption={visual.caption} />;
+    case 'table':
+      return <TableView head={visual.head} rows={visual.rows} caption={visual.caption} />;
+    case 'stack':
+      return (
+        <div className="visual-stack">
+          {visual.items.map((v, i) => (
+            <VisualView key={i} visual={v} guessBp={guessBp} />
+          ))}
+        </div>
       );
     case 'agaroseTable':
       return (

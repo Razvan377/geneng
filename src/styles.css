@@ -2167,3 +2167,505 @@ select.input {
     transition: none !important;
   }
 }
+
+/* ============================================================================================
+   Blots, gene diagrams, vectors, case problems (exam-preparation modes)
+   ============================================================================================ */
+
+/* Gel looks: X-ray/ECL film for Southern/Northern/Western blots, Coomassie for SDS-PAGE. */
+.gel--film {
+  --gel-top: #f1efe9;
+  --gel-bottom: #e3e0d8;
+  --band: #191714;
+  --gel-well: rgba(0, 0, 0, 0.14);
+}
+
+.gel--coomassie {
+  --gel-top: #ecf0f7;
+  --gel-bottom: #e1e7f2;
+  --band: #1d3a8a;
+  --gel-well: rgba(20, 40, 100, 0.22);
+}
+
+.blot-figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.visual-stack {
+  display: grid;
+  gap: 12px;
+}
+
+/* Gene structure */
+.gene-figure,
+.probe-map,
+.vector-view,
+.bars-chart {
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.gene-figure svg,
+.probe-map svg {
+  display: block;
+  overflow: visible;
+}
+
+.gene-line {
+  stroke: var(--muted);
+  stroke-width: 1.6;
+}
+
+.gene-promoter {
+  fill: var(--muted-tint);
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.gene-tss {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.6;
+}
+
+.exon-utr {
+  fill: var(--surface);
+  stroke: var(--teal);
+  stroke-width: 1.6;
+}
+
+.exon-cds {
+  fill: var(--teal);
+}
+
+.exon-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  fill: var(--surface);
+  paint-order: stroke;
+  stroke: var(--teal);
+  stroke-width: 2px;
+}
+
+.exon-label-utr {
+  fill: var(--teal-ink);
+  stroke: none;
+}
+
+.gene-site line {
+  stroke: var(--coral);
+  stroke-width: 2;
+}
+
+.gene-site text {
+  font-size: 10px;
+  fill: var(--coral-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.gene-probe rect {
+  fill: var(--amber);
+}
+
+.gene-epitope path {
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 1.4;
+}
+
+.gene-epitope text,
+.gene-small,
+.primer-label {
+  font-size: 10px;
+  fill: var(--text-2);
+  font-weight: 600;
+}
+
+.primer-f {
+  fill: none;
+  stroke: var(--teal-ink);
+  stroke-width: 2;
+}
+
+.primer-r {
+  fill: none;
+  stroke: var(--coral-ink);
+  stroke-width: 2;
+}
+
+.gene-marker path {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.6;
+}
+
+.gene-marker .gene-marker-point {
+  fill: var(--text);
+  stroke: none;
+}
+
+.gene-marker text {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--text);
+}
+
+.gene-ruler line {
+  stroke: var(--border-strong);
+}
+
+.gene-ruler text {
+  font-size: 9.5px;
+  fill: var(--muted);
+}
+
+.gene-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+
+.gene-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.swatch-cds {
+  background: var(--teal);
+}
+
+.swatch-utr {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--teal);
+}
+
+.swatch-site {
+  background: var(--coral);
+  width: 3px !important;
+}
+
+.swatch-probe {
+  background: var(--amber);
+}
+
+/* Restriction map with probe / gene */
+.pm-site line {
+  stroke: var(--coral);
+  stroke-width: 1.6;
+}
+
+.pm-site text {
+  font-size: 10.5px;
+  font-weight: 600;
+  fill: var(--text-2);
+}
+
+.pm-probe {
+  fill: var(--amber);
+}
+
+.pm-gene rect {
+  fill: var(--amber-tint);
+  stroke: var(--amber);
+  stroke-width: 1.4;
+}
+
+.pm-arrow {
+  fill: none;
+  stroke: var(--amber-ink);
+  stroke-width: 2;
+}
+
+.pm-gene-label {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--amber-ink);
+}
+
+/* Expression vector cassette */
+.cassette,
+.backbone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cas {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+}
+
+.cas-promoter {
+  border-color: var(--teal);
+  background: var(--teal-tint);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+  padding-right: 18px;
+}
+
+.cas-tag {
+  border-color: var(--amber);
+  background: var(--amber-tint);
+}
+
+.cas-protease {
+  border-color: var(--coral);
+  background: var(--coral-tint);
+}
+
+.cas-mcs {
+  background: repeating-linear-gradient(90deg, var(--surface-2) 0 6px, var(--surface) 6px 12px);
+}
+
+.cas-terminator {
+  border-style: dashed;
+}
+
+.bb {
+  display: inline-grid;
+  gap: 1px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.bb small {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Bar chart (single series) */
+.bars-unit {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.bars-chart .bar-row {
+  grid-template-columns: minmax(0, 11em) minmax(0, 1fr) 3.5em;
+}
+
+.bar-label {
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.bars-chart .bar-track {
+  height: 14px;
+  overflow: visible;
+}
+
+.bars-chart .bar-fill {
+  border-radius: 0 4px 4px 0;
+}
+
+.bar-ref {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 0;
+  border-left: 1.5px dashed var(--text-2);
+}
+
+@media (max-width: 520px) {
+  .bars-chart .bar-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+/* Draw-the-blot input */
+.lanes-input {
+  display: grid;
+  gap: 10px;
+}
+
+.lane-rows {
+  display: grid;
+  gap: 6px;
+}
+
+.lane-row {
+  display: grid;
+  grid-template-columns: 3.4em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.lane-row.is-good {
+  background: var(--good-tint);
+}
+
+.lane-row.is-bad {
+  background: var(--bad-tint);
+}
+
+.lane-name {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.lane-bands {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.band-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.band-chip:disabled {
+  cursor: default;
+}
+
+.band-chip-none {
+  color: var(--muted);
+  font-style: italic;
+  cursor: default;
+}
+
+.lane-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.input-band {
+  width: 74px;
+  min-height: 34px;
+  padding: 4px 8px;
+}
+
+.lane-verdict {
+  display: inline-flex;
+}
+
+.lane-row.is-good .lane-verdict {
+  color: var(--good);
+}
+
+.lane-row.is-bad .lane-verdict,
+.lane-expected {
+  color: var(--bad);
+}
+
+.lane-expected {
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.blot-compare {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 640px) {
+  .blot-compare.is-graded {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* Matching */
+.match-input {
+  display: grid;
+  gap: 6px;
+}
+
+.match-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, auto) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 520px) {
+  .match-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .match-row select {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+.match-row.is-good {
+  background: var(--good-tint);
+}
+
+.match-row.is-bad {
+  background: var(--bad-tint);
+}
+
+.match-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.match-row.is-good .match-verdict {
+  color: var(--good);
+}
+
+.match-row.is-bad .match-verdict {
+  color: var(--bad);
+}
+
+/* Multi-part problems */
+.case-part {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 72px;
+}
+
+.case-part-title {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--teal-ink);
+}
+
+.case-part-title .muted {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.case-summary {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}

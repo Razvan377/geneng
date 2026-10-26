@@ -1,7 +1,7 @@
 /** Grading of typed / tapped answers. Pure functions, unit tested. */
 
 import { relativeError } from '../science/numbers';
-import type { ChoiceQuestion, Grade, NumericQuestion, OrderQuestion, Question } from './types';
+import type { ChoiceQuestion, Grade, LanesQuestion, MatchQuestion, NumericQuestion, OrderQuestion, SimpleQuestion } from './types';
 
 export function gradeChoice(q: ChoiceQuestion, selected: readonly string[]): Grade {
   const want = new Set(q.correct);
@@ -43,12 +43,49 @@ export function gradeOrder(q: OrderQuestion, order: readonly string[]): Grade {
   return { correct, score: correct ? 1 : 0, headline: correct ? 'Correct order' : 'Not quite' };
 }
 
-export type Answer = { format: 'choice'; selected: string[] } | { format: 'numeric'; value: number | null } | { format: 'order'; order: string[] };
+/** Absolute slack per band on top of the relative tolerance (reading a size off a blot). */
+const ABS_SLACK = { kb: 0.02, kDa: 0.6 } as const;
 
-export function grade(q: Question, a: Answer): Grade {
+/** One lane matches when it has the same number of bands and each is within tolerance. */
+export function laneMatches(expected: readonly number[], given: readonly number[], tolerance: number, unit: 'kb' | 'kDa'): boolean {
+  if (expected.length !== given.length) return false;
+  const e = [...expected].sort((a, b) => a - b);
+  const g = [...given].sort((a, b) => a - b);
+  return e.every((v, i) => Math.abs(g[i] - v) <= Math.max(v * tolerance, ABS_SLACK[unit]) + 1e-9);
+}
+
+export function gradeLanes(q: LanesQuestion, lanes: readonly (readonly number[])[]): Grade {
+  const details = q.expected.map((exp, i) => laneMatches(exp, lanes[i] ?? [], q.tolerance, q.unit));
+  const right = details.filter(Boolean).length;
+  const correct = right === details.length;
+  return {
+    correct,
+    score: right / details.length,
+    headline: correct ? 'Every lane is right' : `${right} of ${details.length} lanes right`,
+    details,
+  };
+}
+
+export function gradeMatch(q: MatchQuestion, choice: Readonly<Record<string, string>>): Grade {
+  const details = q.rows.map((r) => (q.correct[r.id] ?? []).includes(choice[r.id]));
+  const right = details.filter(Boolean).length;
+  const correct = right === details.length;
+  return { correct, score: right / details.length, headline: correct ? 'All matched' : `${right} of ${details.length} right`, details };
+}
+
+export type Answer =
+  | { format: 'choice'; selected: string[] }
+  | { format: 'numeric'; value: number | null }
+  | { format: 'order'; order: string[] }
+  | { format: 'lanes'; lanes: number[][] }
+  | { format: 'match'; choice: Record<string, string> };
+
+export function grade(q: SimpleQuestion, a: Answer): Grade {
   if (q.format === 'choice' && a.format === 'choice') return gradeChoice(q, a.selected);
   if (q.format === 'numeric' && a.format === 'numeric') return gradeNumeric(q, a.value);
   if (q.format === 'order' && a.format === 'order') return gradeOrder(q, a.order);
+  if (q.format === 'lanes' && a.format === 'lanes') return gradeLanes(q, a.lanes);
+  if (q.format === 'match' && a.format === 'match') return gradeMatch(q, a.choice);
   throw new Error('Answer format does not match question');
 }
 

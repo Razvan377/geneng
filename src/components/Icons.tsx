@@ -166,6 +166,37 @@ export const ModeGlyph = ({ mode, size = 28 }: { mode: string; size?: number }) 
           <path d="M6 7h4M14 7h4M6 11h4M14 13h4M6 15h4M14 17h4" />
         </Svg>
       );
+    case 'blot':
+      return (
+        <Svg size={size} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M6 8h3M6 12h3M6 16h3" />
+          <path d="M12.5 9h5M12.5 14h5" strokeWidth={2.6} />
+        </Svg>
+      );
+    case 'clone':
+      return (
+        <Svg size={size} strokeWidth={1.6}>
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 4v4M12 16v4" />
+          <path d="M9 9.5h6v5H9z" />
+        </Svg>
+      );
+    case 'expr':
+      return (
+        <Svg size={size} strokeWidth={1.6}>
+          <path d="M3 12h4l2-3 2 6 2-3h8" />
+          <path d="M17 7l4 5-4 5" />
+        </Svg>
+      );
+    case 'func':
+      return (
+        <Svg size={size} strokeWidth={1.6}>
+          <circle cx="8" cy="12" r="4" />
+          <circle cx="16" cy="12" r="4" />
+          <path d="M12 9v6" />
+        </Svg>
+      );
     case 'num':
       return (
         <Svg size={size} strokeWidth={1.6}>

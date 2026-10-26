@@ -21,8 +21,8 @@ import { createRng, type Rng } from '../science/rng';
 import { formatSize } from './gelQuestions';
 import type { ChoiceQuestion, NumericQuestion, OrderQuestion, Question } from './types';
 
-export type NumbersKind = 'freq' | 'units' | 'a260' | 'purity' | 'coverage' | 'vectors';
-export const NUMBERS_KINDS: NumbersKind[] = ['freq', 'units', 'a260', 'purity', 'coverage', 'vectors'];
+export type NumbersKind = 'freq' | 'units' | 'unitsites' | 'a260' | 'purity' | 'coverage' | 'vectors';
+export const NUMBERS_KINDS: NumbersKind[] = ['freq', 'units', 'unitsites', 'a260', 'purity', 'coverage', 'vectors'];
 
 export function generateNumbersQuestion(seed: string, kind?: NumbersKind): Question {
   const rng = createRng(`num/${seed}`);
@@ -32,6 +32,8 @@ export function generateNumbersQuestion(seed: string, kind?: NumbersKind): Quest
       return freqQuestion(rng, seed);
     case 'units':
       return unitsQuestion(rng, seed);
+    case 'unitsites':
+      return unitsBySitesQuestion(rng, seed);
     case 'a260':
       return a260Question(rng, seed);
     case 'purity':
@@ -110,6 +112,42 @@ function unitsQuestion(rng: Rng, seed: string): NumericQuestion {
       '1 unit (U) of a restriction enzyme cuts 1 µg of DNA in 1 hour.',
       `${trimNumber(ug)} µg in ${hours} h needs ${trimNumber(ug)} / ${hours} = ${trimNumber(units, 3)} U. At ${conc} U/µl that is ${trimNumber(units, 3)} / ${conc} = ${trimNumber(volumeUl, 3)} µl.`,
       brown ? 'This is the example in Brown §4.2.6: 2 U of BglII for 2 µg of λ DNA = 0.5 µl.' : 'In practice people add an excess, but keep the enzyme below 10% of the reaction volume (it is stored in glycerol).',
+    ],
+  };
+}
+
+/** λ DNA (48.5 kb) site counts for the unit definition; the course problem uses 50 kb / 4 sites. */
+const LAMBDA_SITES = [
+  { enzyme: 'EcoRI', sites: 5 },
+  { enzyme: 'HindIII', sites: 7 },
+  { enzyme: 'BamHI', sites: 5 },
+];
+
+function unitsBySitesQuestion(rng: Rng, seed: string): NumericQuestion {
+  const course = rng.chance(0.3);
+  const ref = course ? { enzyme: 'EcoRI', sites: 4 } : rng.pick(LAMBDA_SITES);
+  const lambdaKb = course ? 50 : 48.5;
+  const plasmidKb = course ? 5 : rng.pick([2.5, 3, 4, 5, 6, 8, 10]);
+  const sites = course ? 2 : rng.int(1, 4);
+  const ug = course ? 1 : rng.pick([1, 2, 3, 5]);
+  const hours = course ? 1 : rng.pick([1, 1, 2]);
+  const densityRatio = sites / plasmidKb / (ref.sites / lambdaKb);
+  const units = (ug * densityRatio) / hours;
+  return {
+    kind: 'num.unitsites',
+    seed,
+    format: 'numeric',
+    prompt:
+      `A unit of ${ref.enzyme} is the amount that digests 1 µg of λ DNA (${lambdaKb} kb, ${ref.sites} ${ref.enzyme} sites) in 1 hour. ` +
+      `How many units do you need to digest ${trimNumber(ug)} µg of a ${trimNumber(plasmidKb)} kb plasmid with ${sites} ${ref.enzyme} site${sites > 1 ? 's' : ''} in ${hours === 1 ? '1 hour' : `${hours} hours`}?`,
+    answer: units,
+    unit: 'U',
+    tolerance: 0.03,
+    answerLabel: `${trimNumber(units, 2)} U`,
+    explanation: [
+      'Enzyme work is proportional to the number of sites to cut, not to the mass of DNA. Per µg, the number of sites is proportional to (sites ÷ length).',
+      `λ: ${ref.sites} sites / ${lambdaKb} kb = ${trimNumber(ref.sites / lambdaKb, 4)} sites per kb. Plasmid: ${sites} / ${trimNumber(plasmidKb)} kb = ${trimNumber(sites / plasmidKb, 4)} sites per kb — ${trimNumber(densityRatio, 3)}× more sites per µg.`,
+      `Units = ${trimNumber(ug)} µg × ${trimNumber(densityRatio, 3)}${hours > 1 ? ` ÷ ${hours} h` : ''} = ${trimNumber(units, 2)} U.${course ? ' (This is the course problem: 5 U.)' : ''}`,
     ],
   };
 }

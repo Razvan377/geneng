@@ -13,18 +13,21 @@ import {
   sizeFromCurve,
   standardCurve,
 } from '../science/gel';
+import { bandIntensity } from '../science/gel';
 import { createRng, type Rng } from '../science/rng';
-import type { ChoiceQuestion, NumericQuestion, Question } from './types';
+import type { CaseQuestion, ChoiceQuestion, NumericQuestion, Question } from './types';
 
-export type GelKind = 'size' | 'agarose' | 'pfge';
-export const GEL_KINDS: GelKind[] = ['size', 'agarose', 'pfge'];
+export type GelKind = 'size' | 'agarose' | 'pfge' | 'quant';
+export const GEL_KINDS: GelKind[] = ['size', 'agarose', 'pfge', 'quant'];
 
 export const RUN_MM = 80;
 
 export function generateGelQuestion(seed: string, kind?: GelKind): Question {
   const rng = createRng(`gel/${seed}`);
-  const k = kind ?? rng.pick<GelKind>(['size', 'size', 'agarose', 'pfge']);
+  const k = kind ?? rng.pick<GelKind>(['size', 'size', 'agarose', 'pfge', 'quant']);
   switch (k) {
+    case 'quant':
+      return quantQuestion(rng, seed);
     case 'size':
       return sizeQuestion(rng, seed);
     case 'agarose':
@@ -186,5 +189,94 @@ function pfgeQuestion(rng: Rng, seed: string): ChoiceQuestion {
         ? `At ${formatSize(sample.bp)} this is beyond that limit, so use PFGE (OFAGE, CHEF, FIGE): the field keeps changing direction, and because short molecules re-orient faster than long ones, molecules up to several Mb are separated.`
         : `At ${formatSize(sample.bp)} or less this is well within the range of an ordinary agarose gel (choose the % to match the sizes).`,
     ],
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// DNA quantification by band intensity (marker of known concentration, dilution series)
+
+const MARKER_MIXES = [
+  [55, 40, 5],
+  [50, 30, 20],
+  [60, 25, 15],
+  [45, 35, 20],
+  [70, 20, 10],
+];
+const DILUTIONS = [1, 10, 100];
+const LANE_NAME = (d: number) => (d === 1 ? '(D)' : `(1/${d})`);
+
+function quantQuestion(rng: Rng, seed: string): CaseQuestion {
+  const markerConc = rng.pick([50, 100, 200]);
+  const mix = rng.pick(MARKER_MIXES);
+  const sizes = rng.pick([
+    [6000, 3000, 1000],
+    [10000, 4000, 1500],
+    [5000, 2500, 800],
+  ]);
+  const names = ['A', 'B', 'C'];
+  // The sample band matches marker band `ref` in the marker lane diluted `dm`, in the sample lane diluted `dp`.
+  const ref = rng.int(0, 2);
+  const dm = rng.pick([10, 100]);
+  const dp = rng.pick(DILUTIONS.filter((d) => d < dm));
+  const matchMass = (markerConc * mix[ref]) / 100 / dm; // ng in that marker band
+  const sampleConc = matchMass * dp; // ng/µl
+  const sampleSize = rng.pick([2000, 3500, 4500, 7000].filter((x) => !sizes.includes(x)));
+  const lanes = DILUTIONS.flatMap((d) => [
+    { label: `C·${d === 1 ? 'D' : d}`, bands: sizes.map((size, i) => ({ size, mass: (markerConc * mix[i]) / 100 / d })) },
+    { label: `P·${d === 1 ? 'D' : d}`, bands: [{ size: sampleSize, mass: sampleConc / d }] },
+  ]);
+  const maxMass = Math.max(...lanes.flatMap((l) => l.bands.map((b) => b.mass)));
+  const target = 10 * rng.int(1, 5);
+  const volume = target / sampleConc;
+  const fmt = (x: number) => trimNumber(x, 2);
+
+  const concPart: NumericQuestion = {
+    kind: 'gel.quant',
+    seed,
+    format: 'numeric',
+    prompt: 'What is the DNA concentration of sample P?',
+    answer: sampleConc,
+    unit: 'ng/µl',
+    tolerance: 0.02,
+    answerLabel: `${fmt(sampleConc)} ng/µl`,
+    explanation: [
+      'Band intensity is proportional to the mass of DNA in the band, so equally intense bands contain the same number of ng, whatever their size.',
+      `Band ${names[ref]} is ${mix[ref]}% of the marker: ${markerConc} ng/µl × 1 µl × ${mix[ref] / 100} = ${fmt((markerConc * mix[ref]) / 100)} ng in the undiluted lane, and ${fmt(matchMass)} ng after the 1/${dm} dilution.`,
+      `The P ${LANE_NAME(dp)} band has the same intensity, so it also holds ${fmt(matchMass)} ng. That lane is 1 µl of P${dp === 1 ? '' : ` diluted 1/${dp}`}, so P = ${fmt(matchMass)} ng${dp === 1 ? '' : ` × ${dp}`} / 1 µl = ${fmt(sampleConc)} ng/µl.`,
+      'Check with another lane: each tenfold dilution must give a band tenfold weaker, matching the next marker lane.',
+    ],
+  };
+  const volumePart: NumericQuestion = {
+    kind: 'gel.quant',
+    seed,
+    format: 'numeric',
+    prompt: `How many µl of P do you need to have ${target} ng of DNA?`,
+    answer: volume,
+    unit: 'µl',
+    tolerance: 0.02,
+    answerLabel: `${fmt(volume)} µl`,
+    explanation: [`${target} ng ÷ ${fmt(sampleConc)} ng/µl = ${fmt(volume)} µl.`],
+  };
+  return {
+    kind: 'gel.quant',
+    seed,
+    format: 'case',
+    prompt:
+      `To estimate the concentration of a DNA sample (P), it was run next to a marker (C) of known concentration (${markerConc} ng/µl). ` +
+      `The marker has three bands, A, B and C, that are ${mix.join(', ')}% of its DNA. 1 µl of each was loaded undiluted (D) and diluted 1/10 and 1/100. ` +
+      `The band in lane P ${LANE_NAME(dp)} is as intense as band ${names[ref]} in lane C ${LANE_NAME(dm)}.`,
+    visual: {
+      type: 'blot',
+      look: 'agarose',
+      unit: 'kb',
+      ladder: [],
+      lanes: lanes.map((l) => ({
+        label: l.label,
+        bands: l.bands.map((b) => ({ size: b.size / 1000, intensity: bandIntensity(b.mass, maxMass) })),
+      })),
+      caption: `Lanes: C = marker, P = sample; D = undiluted, 10 = diluted 1/10, 100 = diluted 1/100. Marker bands from the top: A (${formatSize(sizes[0])}), B (${formatSize(sizes[1])}), C (${formatSize(sizes[2])}).`,
+    },
+    parts: [concPart, volumePart],
+    explanation: [],
   };
 }

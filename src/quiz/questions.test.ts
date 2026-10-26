@@ -8,13 +8,28 @@ import { gradeChoice, gradeNumeric, gradeOrder, pointsFor } from './grade';
 import { KIND_LABELS } from './kinds';
 import { generateNumbersQuestion, NUMBERS_KINDS } from './numbersQuestions';
 import { BROWN_PRIMER, generatePcrQuestion, makeBadPair, PCR_KINDS } from './pcrQuestions';
-import type { ChoiceQuestion, NumericQuestion, Question } from './types';
+import type { ChoiceQuestion, NumericQuestion, Question, SimpleQuestion } from './types';
+import { BLOT_KINDS, generateBlotQuestion } from './blotQuestions';
+import { CLONING_KINDS, generateCloningQuestion } from './cloningQuestions';
+import { EXPRESSION_KINDS, generateExpressionQuestion } from './expressionQuestions';
+import { FUNCTIONAL_KINDS, generateFunctionalQuestion } from './functionalQuestions';
+import { gradeLanes, gradeMatch } from './grade';
 
 const SEEDS = Array.from({ length: 40 }, (_, i) => `q${i}`);
 
 function checkWellFormed(q: Question) {
-  expect(KIND_LABELS[q.kind]).toBeDefined();
   expect(q.prompt.length).toBeGreaterThan(10);
+  if (q.format === 'case') {
+    expect(q.parts.length).toBeGreaterThan(1);
+    for (const p of q.parts) checkPart(p);
+    return;
+  }
+  checkPart(q);
+}
+
+function checkPart(q: SimpleQuestion) {
+  expect(KIND_LABELS[q.kind]).toBeDefined();
+  expect(q.prompt.length).toBeGreaterThan(5);
   expect(q.explanation.length).toBeGreaterThan(0);
   if (q.format === 'choice') {
     const ids = q.options.map((o) => o.id);
@@ -26,8 +41,18 @@ function checkWellFormed(q: Question) {
   } else if (q.format === 'numeric') {
     expect(Number.isFinite(q.answer)).toBe(true);
     expect(gradeNumeric(q, q.answer).correct).toBe(true);
-  } else {
+  } else if (q.format === 'order') {
     expect([...q.correct].sort()).toEqual(q.items.map((i) => i.id).sort());
+  } else if (q.format === 'lanes') {
+    expect(q.expected).toHaveLength(q.lanes.length);
+    expect(gradeLanes(q, q.expected).correct).toBe(true);
+    const top = Math.max(...q.ladder);
+    for (const lane of q.expected) for (const b of lane) expect(b).toBeLessThanOrEqual(top);
+  } else {
+    const optionIds = q.options.map((o) => o.id);
+    const answer = Object.fromEntries(q.rows.map((r) => [r.id, q.correct[r.id][0]]));
+    for (const r of q.rows) for (const c of q.correct[r.id]) expect(optionIds).toContain(c);
+    expect(gradeMatch(q, answer).correct).toBe(true);
   }
 }
 
@@ -36,6 +61,10 @@ describe.each([
   ['pcr', PCR_KINDS, generatePcrQuestion],
   ['gel', GEL_KINDS, generateGelQuestion],
   ['numbers', NUMBERS_KINDS, generateNumbersQuestion],
+  ['blots', BLOT_KINDS, generateBlotQuestion],
+  ['cloning', CLONING_KINDS, generateCloningQuestion],
+  ['expression', EXPRESSION_KINDS, generateExpressionQuestion],
+  ['functional', FUNCTIONAL_KINDS, generateFunctionalQuestion],
 ] as const)('%s generators', (_mode, kinds, generate) => {
   it.each([...kinds])('%s: well-formed and reproducible for many seeds', (kind) => {
     for (const seed of SEEDS) {

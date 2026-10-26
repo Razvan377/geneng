@@ -19,8 +19,8 @@ export function Home() {
       <section className="hero">
         <h1>Practise the calculations the exam asks for.</h1>
         <p className="muted">
-          Restriction maps, gels, sticky ends, PCR and lab numbers — every question is generated from a seed, checked by
-          the same code that is unit-tested, and explained step by step.
+          Restriction maps, blots, cloning strategies, expression vectors, PCR and lab numbers — every question is generated
+          from a seed, checked by the same code that is unit-tested, and explained step by step.
         </p>
       </section>
 

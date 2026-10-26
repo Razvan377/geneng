@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { IconAuto, IconChart, IconFlame, IconMoon, IconStar, IconSun } from './components/Icons';
 import { href, useRoute } from './lib/router';
 import { useTheme } from './lib/theme';
-import { EndsMode, GelMode, NumbersMode, PcrMode } from './modes/QuizModes';
+import { BlotsMode, CloningMode, EndsMode, ExpressionMode, FunctionalMode, GelMode, NumbersMode, PcrMode } from './modes/QuizModes';
 import { Home } from './modes/Home';
 import { MappingMode } from './modes/MappingMode';
 import { StatsScreen } from './modes/StatsScreen';
@@ -42,6 +42,18 @@ function Shell() {
       break;
     case '/numbers':
       page = <NumbersMode />;
+      break;
+    case '/blots':
+      page = <BlotsMode />;
+      break;
+    case '/cloning':
+      page = <CloningMode />;
+      break;
+    case '/expression':
+      page = <ExpressionMode />;
+      break;
+    case '/functional':
+      page = <FunctionalMode />;
       break;
     case '/tf':
       page = <TrueFalseMode />;

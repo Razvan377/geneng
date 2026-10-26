@@ -1,5 +1,5 @@
 /**
- * Question model shared by the quiz modes (ends, PCR, gels, numbers).
+ * Question model shared by the quiz modes.
  *
  * Generators are pure functions `(seed) => Question`: the question, its correct answer and its
  * explanation are all derived from the seed, so any question can be replayed or shared.
@@ -7,6 +7,7 @@
  */
 
 import type { CloningSetup, DsEnd } from '../science/ends';
+import type { GeneModel } from '../science/geneModel';
 
 export type Tone = 'teal' | 'coral' | 'amber' | 'muted';
 
@@ -53,7 +54,42 @@ export type Visual =
       unknownMm: number;
       unknownBp: number;
     }
-  | { type: 'agaroseTable'; highlight: number[]; target?: [number, number] };
+  | { type: 'agaroseTable'; highlight: number[]; target?: [number, number] }
+  | { type: 'gene'; gene: GeneModel; markers: GeneMarker[]; show: { probe?: boolean; primers?: boolean; epitope?: boolean; sites?: boolean } }
+  | {
+      type: 'probeMap';
+      length: number;
+      sites: { enzyme: string; pos: number }[];
+      /** Highlighted region: a probe, or a gene when `arrow` gives its direction of transcription. */
+      probe: [number, number];
+      regionLabel?: string;
+      arrow?: 1 | -1;
+    }
+  | { type: 'vector'; name: string; size?: string; features: VectorFeature[]; mcs?: string }
+  | { type: 'bars'; unit: string; bars: { label: string; value: number; error?: number }[]; reference?: number; caption?: string }
+  | { type: 'blot'; look: BlotLook; unit: BlotUnit; ladder: number[]; lanes: BlotLaneData[]; caption?: string }
+  | { type: 'table'; head: string[]; rows: string[][]; caption?: string }
+  | { type: 'stack'; items: Visual[] };
+
+export type BlotLook = 'film' | 'coomassie' | 'agarose';
+export type BlotUnit = 'kb' | 'kDa';
+
+export interface BlotLaneData {
+  label: string;
+  bands: { size: number; intensity?: number }[];
+}
+
+/** A labelled position (or span) on a gene drawing, e.g. where a variant hits. */
+export interface GeneMarker {
+  label: string;
+  at: number;
+  to?: number;
+}
+
+export interface VectorFeature {
+  label: string;
+  kind: 'promoter' | 'tag' | 'mcs' | 'marker' | 'ori' | 'terminator' | 'protease' | 'other';
+}
 
 export interface QuestionBase {
   /** Stats key, e.g. "ends.recut". */
@@ -108,11 +144,43 @@ export interface OrderQuestion extends QuestionBase {
   correct: string[];
 }
 
-export type Question = ChoiceQuestion | NumericQuestion | OrderQuestion;
+/** "Draw the expected blot": the player enters the band sizes of every lane. */
+export interface LanesQuestion extends QuestionBase {
+  format: 'lanes';
+  look: BlotLook;
+  unit: BlotUnit;
+  ladder: number[];
+  lanes: { id: string; label: string }[];
+  /** Expected band sizes per lane (in `unit`); [] = no band. */
+  expected: number[][];
+  /** Accepted relative error per band. */
+  tolerance: number;
+}
+
+/** Assign each row (sample, aliquot…) to one of the options (lane, interpretation…). */
+export interface MatchQuestion extends QuestionBase {
+  format: 'match';
+  rows: { id: string; label: string }[];
+  options: { id: string; label: string }[];
+  /** Accepted option ids for each row (more than one when two samples look identical). */
+  correct: Record<string, string[]>;
+}
+
+export type SimpleQuestion = ChoiceQuestion | NumericQuestion | OrderQuestion | LanesQuestion | MatchQuestion;
+
+/** A multi-part problem sharing one scenario: parts are answered one after another. */
+export interface CaseQuestion extends QuestionBase {
+  format: 'case';
+  parts: SimpleQuestion[];
+}
+
+export type Question = SimpleQuestion | CaseQuestion;
 
 export interface Grade {
   correct: boolean;
-  /** 0–1, for partial credit (gel estimates). */
+  /** 0–1, for partial credit (gel estimates, lanes, matches). */
   score: number;
   headline: string;
+  /** Per-lane / per-row verdicts for lanes and match questions. */
+  details?: boolean[];
 }

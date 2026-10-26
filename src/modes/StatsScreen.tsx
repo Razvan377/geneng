@@ -7,8 +7,15 @@ import { formatPercent } from '../science/format';
 import { modeAccuracy, weakSpots } from '../state/progress';
 import { useProgress } from '../state/ProgressContext';
 
+/** Question types that only exist as parts of a bigger problem, and the problem that trains them. */
+const PART_OF: Record<string, string> = {
+  'clone.excise': 'clone.plac',
+  'clone.orient': 'clone.plac',
+};
+
 /** Link that starts practising one question type. */
-function practiceHref(kind: string): string {
+function practiceHref(partKind: string): string {
+  const kind = PART_OF[partKind] ?? partKind;
   const mode = modeOf(kind);
   const sub = kind.slice(kind.indexOf('.') + 1);
   if (mode === 'map') return href('/map', { d: sub });
