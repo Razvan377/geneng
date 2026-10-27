@@ -131,6 +131,14 @@ export const IconUndo = (p: IconProps) => (
   </Svg>
 );
 
+export const IconExam = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M7 3h7l4 4v14H7z" />
+    <path d="M14 3v4h4" />
+    <path d="M10 11h5M10 14h5M10 17h3" />
+  </Svg>
+);
+
 /** Mode glyphs for the home screen. */
 export const ModeGlyph = ({ mode, size = 28 }: { mode: string; size?: number }) => {
   switch (mode) {

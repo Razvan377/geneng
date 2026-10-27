@@ -1,4 +1,4 @@
-import { IconCalendar, ModeGlyph } from '../components/Icons';
+import { IconCalendar, IconExam, ModeGlyph } from '../components/Icons';
 import { href } from '../lib/router';
 import { MODE_ORDER, MODES } from '../quiz/kinds';
 import { formatPercent } from '../science/format';
@@ -6,6 +6,7 @@ import { CLASSICS } from '../science/puzzle';
 import { isoDate } from '../science/rng';
 import { modeAccuracy } from '../state/progress';
 import { useProgress } from '../state/ProgressContext';
+import { loadJSON } from '../state/storage';
 import { dailyDifficulty } from './MappingMode';
 
 export function Home() {
@@ -13,6 +14,8 @@ export function Home() {
   const acc = modeAccuracy(progress);
   const today = isoDate(new Date());
   const daily = progress.daily[today];
+  const exams = loadJSON<{ grade: number }[]>('examHistory', []);
+  const lastExam = Array.isArray(exams) && exams.length ? exams[0].grade : null;
 
   return (
     <div className="page home">
@@ -34,6 +37,18 @@ export function Home() {
           <span className="muted small">Same puzzle for everyone today — generated from the date.</span>
         </div>
         <span className={`tag ${daily?.solved ? 'tag-good' : 'tag-accent'}`}>{daily?.solved ? `Solved · +${daily.points}` : 'Play'}</span>
+      </a>
+
+      <a className="card daily-card exam-card" href={href('/exam')}>
+        <div className="daily-icon exam-icon">
+          <IconExam size={26} />
+        </div>
+        <div className="daily-text">
+          <span className="eyebrow">Mock exam</span>
+          <strong>A full 7-problem exam, new every time</strong>
+          <span className="muted small">Cloning, calculations, blots, expression vectors, two-hybrid and techniques — corrected and graded out of 10 at the end.</span>
+        </div>
+        <span className="tag tag-accent">{lastExam !== null ? `Last ${lastExam.toFixed(1)}` : 'Start'}</span>
       </a>
 
       <div className="mode-grid">

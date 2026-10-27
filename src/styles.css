@@ -2669,3 +2669,170 @@ select.input {
   border-radius: 10px;
   background: var(--surface-2);
 }
+
+/* ============================================================================================
+   Mock exam
+   ============================================================================================ */
+
+.exam-card {
+  border-color: color-mix(in srgb, var(--teal) 45%, var(--border));
+}
+
+.exam-icon {
+  background: var(--teal-tint);
+  color: var(--teal-ink);
+}
+
+.exam-intro {
+  display: grid;
+  gap: 10px;
+}
+
+.exam-outline {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 4px;
+}
+
+.exam-bar {
+  position: sticky;
+  top: 57px;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+}
+
+.exam-progress {
+  font-variant-numeric: tabular-nums;
+}
+
+.exam-progress-track {
+  flex: 1 1 80px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.exam-progress-track span {
+  display: block;
+  height: 100%;
+  background: var(--teal);
+  border-radius: 999px;
+  transition: width 0.2s;
+}
+
+.exam-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+.exam-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.exam-final strong {
+  font-size: 1.1rem;
+}
+
+.exam-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.exam-toc a {
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 0.84rem;
+  text-decoration: none;
+}
+
+.exam-toc a:hover {
+  background: var(--surface-2);
+}
+
+.exam-problem {
+  scroll-margin-top: 120px;
+}
+
+.exam-problem-head {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--teal);
+}
+
+.exam-problem-head h2 {
+  font-size: 1.15rem;
+}
+
+.exam-block {
+  display: grid;
+  gap: 12px;
+}
+
+.exam-block + .exam-block {
+  padding-top: 16px;
+  border-top: 1px dashed var(--border-strong);
+}
+
+.exam-block-label {
+  font-weight: 700;
+  color: var(--teal-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.saved-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--teal-ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.exam-results {
+  display: grid;
+  gap: 12px;
+}
+
+.exam-grade {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.exam-grade-value {
+  font-size: 2.6rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.exam-end {
+  justify-content: center;
+  padding: 8px 0;
+}

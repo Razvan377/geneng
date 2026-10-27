@@ -136,13 +136,41 @@ function CaseCard({ q, onAnswered, onNext, footer }: { q: CaseQuestion; onAnswer
   );
 }
 
+/** Exam mode: answers are saved without feedback until the exam is finished. */
+export interface ExamOptions {
+  revealed: boolean;
+  /** The player withdrew a saved answer to change it. */
+  onRetract(): void;
+}
+
+/** Grade shown for a part that was left unanswered when the exam ends. */
+function missedGrade(q: SimpleQuestion): Grade {
+  const n = q.format === 'lanes' ? q.lanes.length : q.format === 'match' ? q.rows.length : 0;
+  return { correct: false, score: 0, headline: 'Not answered', details: n ? Array(n).fill(false) : undefined };
+}
+
 /** One question: prompt, visual, answer input, feedback and explanation. */
-function PartView({ q, onAnswered, onDone }: { q: SimpleQuestion; onAnswered: AnswerHandler; onDone(g: Grade): void }) {
+export function PartView({
+  q,
+  onAnswered,
+  onDone,
+  exam,
+}: {
+  q: SimpleQuestion;
+  onAnswered: AnswerHandler;
+  onDone(g: Grade): void;
+  exam?: ExamOptions;
+}) {
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [result, setResult] = useState<{ grade: Grade; points: number } | null>(null);
+  const deferred = exam !== undefined;
+  const revealed = !exam || exam.revealed;
+  const missed = deferred && revealed && !result;
+  const shownGrade = revealed ? (result?.grade ?? (missed ? missedGrade(q) : null)) : null;
+  const locked = result !== null || missed;
 
   const submit = (a: Answer) => {
-    if (result) return;
+    if (result || (deferred && exam!.revealed)) return;
     const g = gradeAnswer(q, a);
     setAnswer(a);
     const points = onAnswered(g, q.kind);
@@ -158,6 +186,7 @@ function PartView({ q, onAnswered, onDone }: { q: SimpleQuestion; onAnswered: An
           ? answer.value
           : null
       : null;
+  const inputProps = { locked, grade: shownGrade, deferred };
 
   return (
     <>
@@ -175,19 +204,36 @@ function PartView({ q, onAnswered, onDone }: { q: SimpleQuestion; onAnswered: An
         </p>
       )}
 
-      {q.format === 'choice' && <ChoiceInput q={q} result={result?.grade ?? null} selected={answer?.format === 'choice' ? answer.selected : null} onSubmit={(selected) => submit({ format: 'choice', selected })} />}
-      {q.format === 'numeric' && <NumericInput q={q} locked={!!result} onSubmit={(value) => submit({ format: 'numeric', value })} />}
-      {q.format === 'order' && <OrderInput q={q} locked={!!result} onSubmit={(order) => submit({ format: 'order', order })} />}
-      {q.format === 'lanes' && <LanesInput q={q} grade={result?.grade ?? null} onSubmit={(lanes) => submit({ format: 'lanes', lanes })} />}
-      {q.format === 'match' && <MatchInput q={q} grade={result?.grade ?? null} onSubmit={(choice) => submit({ format: 'match', choice })} />}
+      {q.format === 'choice' && <ChoiceInput q={q} {...inputProps} onSubmit={(selected) => submit({ format: 'choice', selected })} />}
+      {q.format === 'numeric' && <NumericInput q={q} {...inputProps} onSubmit={(value) => submit({ format: 'numeric', value })} />}
+      {q.format === 'order' && <OrderInput q={q} {...inputProps} onSubmit={(order) => submit({ format: 'order', order })} />}
+      {q.format === 'lanes' && <LanesInput q={q} {...inputProps} onSubmit={(lanes) => submit({ format: 'lanes', lanes })} />}
+      {q.format === 'match' && <MatchInput q={q} {...inputProps} onSubmit={(choice) => submit({ format: 'match', choice })} />}
 
-      {result && (
+      {deferred && !revealed && result && (
+        <p className="saved-note" role="status">
+          <IconCheck size={15} /> Answer saved.
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => {
+              setResult(null);
+              setAnswer(null);
+              exam!.onRetract();
+            }}
+          >
+            Change answer
+          </button>
+        </p>
+      )}
+
+      {shownGrade && (
         <>
-          <div className={`feedback ${result.grade.correct ? 'feedback-good' : result.grade.score > 0 ? 'feedback-neutral' : 'feedback-bad'}`} role="status">
-            {result.grade.correct ? <IconCheck size={18} /> : <IconCross size={18} />}
+          <div className={`feedback ${shownGrade.correct ? 'feedback-good' : shownGrade.score > 0 ? 'feedback-neutral' : 'feedback-bad'}`} role="status">
+            {shownGrade.correct ? <IconCheck size={18} /> : <IconCross size={18} />}
             <div>
-              <strong>{result.grade.headline}.</strong> {answerText(q, answer)}
-              {result.points > 0 && <span> +{result.points} points</span>}
+              <strong>{shownGrade.headline}.</strong> {answerText(q, answer)}
+              {!deferred && result && result.points > 0 && <span> +{result.points} points</span>}
             </div>
           </div>
           {q.revealVisual && (
@@ -205,6 +251,53 @@ function PartView({ q, onAnswered, onDone }: { q: SimpleQuestion; onAnswered: An
           </section>
         </>
       )}
+    </>
+  );
+}
+
+/** A whole question (single or multi-part) laid out for an exam: every part visible at once. */
+export function ExamQuestionView({
+  q,
+  revealed,
+  onGrade,
+}: {
+  q: Question;
+  revealed: boolean;
+  /** Called with the part index and its grade, or null when an answer is withdrawn. */
+  onGrade(part: number, grade: Grade | null): void;
+}) {
+  const parts = q.format === 'case' ? q.parts : [q];
+  const exam = (i: number): ExamOptions => ({ revealed, onRetract: () => onGrade(i, null) });
+  const handler = (i: number): AnswerHandler => (g) => {
+    onGrade(i, g);
+    return 0;
+  };
+  if (q.format !== 'case') {
+    return <PartView q={q} onAnswered={handler(0)} onDone={() => {}} exam={exam(0)} />;
+  }
+  return (
+    <>
+      <p className="prompt">
+        <RichText text={q.prompt} />
+      </p>
+      {q.visual && (
+        <div className="visual">
+          <VisualView visual={q.visual} />
+        </div>
+      )}
+      {q.detail && (
+        <p className="prompt-detail">
+          <RichText text={q.detail} />
+        </p>
+      )}
+      {parts.map((part, i) => (
+        <section key={i} className="case-part">
+          <h3 className="case-part-title">
+            {String.fromCharCode(97 + i)}) <span className="muted">· {kindLabel(part.kind)}</span>
+          </h3>
+          <PartView q={part} onAnswered={handler(i)} onDone={() => {}} exam={exam(i)} />
+        </section>
+      ))}
     </>
   );
 }
@@ -237,9 +330,17 @@ function fmtBand(v: number, unit: string): string {
   return `${trimNumber(v, unit === 'kDa' ? 1 : 2)} ${unit}`;
 }
 
-function LanesInput({ q, grade, onSubmit }: { q: LanesQuestion; grade: Grade | null; onSubmit(lanes: number[][]): void }) {
+interface InputProps {
+  locked: boolean;
+  /** Grade to display (null while feedback is hidden). */
+  grade: Grade | null;
+  /** Exam mode: answers are saved, not checked. */
+  deferred: boolean;
+}
+
+function LanesInput({ q, locked, grade, deferred, onSubmit }: InputProps & { q: LanesQuestion; onSubmit(lanes: number[][]): void }) {
   const [lanes, setLanes] = useState<LaneState[]>(() => q.lanes.map(() => ({ bands: [], none: false, text: '', error: null })));
-  const locked = grade !== null;
+  const graded = grade !== null;
   const ready = lanes.every((l) => l.none || l.bands.length > 0);
 
   const update = (i: number, f: (l: LaneState) => LaneState) => setLanes((ls) => ls.map((l, j) => (j === i ? f(l) : l)));
@@ -311,24 +412,24 @@ function LanesInput({ q, grade, onSubmit }: { q: LanesQuestion; grade: Grade | n
                     </button>
                   </form>
                 )}
-                {locked && verdict === false && (
+                {graded && verdict === false && (
                   <span className="lane-expected">
                     expected: {q.expected[i].length ? q.expected[i].map((b) => fmtBand(b, q.unit)).join(' + ') : 'no band'}
                   </span>
                 )}
                 {l.error && <span className="input-error">{l.error}</span>}
               </div>
-              {locked && <span className="lane-verdict">{verdict ? <IconCheck size={16} /> : <IconCross size={16} />}</span>}
+              {graded && <span className="lane-verdict">{verdict ? <IconCheck size={16} /> : <IconCross size={16} />}</span>}
             </div>
           );
         })}
       </div>
-      <div className={`blot-compare${locked ? ' is-graded' : ''}`}>
+      <div className={`blot-compare${graded ? ' is-graded' : ''}`}>
         <div>
           <div className="cloning-title">Your blot</div>
           <BlotView look={q.look} unit={q.unit} ladder={q.ladder} lanes={preview} errors={errors} height={220} />
         </div>
-        {locked && (
+        {graded && (
           <div>
             <div className="cloning-title">Expected</div>
             <BlotView look={q.look} unit={q.unit} ladder={q.ladder} lanes={expected} height={220} />
@@ -338,7 +439,7 @@ function LanesInput({ q, grade, onSubmit }: { q: LanesQuestion; grade: Grade | n
       {!locked && (
         <div className="actions">
           <button type="button" className="btn btn-primary" disabled={!ready} onClick={() => onSubmit(lanes.map((l) => (l.none ? [] : l.bands)))}>
-            <IconCheck size={16} /> Check blot
+            <IconCheck size={16} /> {deferred ? 'Save answer' : 'Check blot'}
           </button>
           {!ready && <span className="small muted">Every lane needs bands or “No band”.</span>}
         </div>
@@ -350,9 +451,8 @@ function LanesInput({ q, grade, onSubmit }: { q: LanesQuestion; grade: Grade | n
 // ---------------------------------------------------------------------------------------------
 // Matching samples to lanes
 
-function MatchInput({ q, grade, onSubmit }: { q: MatchQuestion; grade: Grade | null; onSubmit(choice: Record<string, string>): void }) {
+function MatchInput({ q, locked, grade, deferred, onSubmit }: InputProps & { q: MatchQuestion; onSubmit(choice: Record<string, string>): void }) {
   const [choice, setChoice] = useState<Record<string, string>>({});
-  const locked = grade !== null;
   const ready = q.rows.every((r) => choice[r.id]);
   const label = (id: string) => q.options.find((o) => o.id === id)?.label ?? id;
   return (
@@ -377,7 +477,7 @@ function MatchInput({ q, grade, onSubmit }: { q: MatchQuestion; grade: Grade | n
                 </option>
               ))}
             </select>
-            {locked && (
+            {grade && (
               <span className="match-verdict">
                 {ok ? <IconCheck size={16} /> : <IconCross size={16} />}
                 {!ok && <span className="lane-expected">{q.correct[r.id].map(label).join(' or ')}</span>}
@@ -389,7 +489,7 @@ function MatchInput({ q, grade, onSubmit }: { q: MatchQuestion; grade: Grade | n
       {!locked && (
         <div className="actions">
           <button type="button" className="btn btn-primary" disabled={!ready} onClick={() => onSubmit(choice)}>
-            <IconCheck size={16} /> Check
+            <IconCheck size={16} /> {deferred ? 'Save answer' : 'Check'}
           </button>
         </div>
       )}
@@ -399,26 +499,18 @@ function MatchInput({ q, grade, onSubmit }: { q: MatchQuestion; grade: Grade | n
 
 // ---------------------------------------------------------------------------------------------
 
-function ChoiceInput({
-  q,
-  result,
-  selected,
-  onSubmit,
-}: {
-  q: ChoiceQuestion;
-  result: Grade | null;
-  selected: string[] | null;
-  onSubmit(ids: string[]): void;
-}) {
+function ChoiceInput({ q, locked, grade, deferred, onSubmit }: InputProps & { q: ChoiceQuestion; onSubmit(ids: string[]): void }) {
   const [picked, setPicked] = useState<string[]>([]);
-  const answered = result !== null;
-  const shown = answered ? (selected ?? []) : picked;
+  const graded = grade !== null;
   const short = q.options.every((o) => o.label.length < 34 && !o.mono);
+  // In practice mode a single-answer question is checked on tap; otherwise pick, then confirm.
+  const confirm = q.multi || deferred;
 
   const toggle = (id: string) => {
-    if (answered) return;
+    if (locked) return;
     if (!q.multi) {
-      onSubmit([id]);
+      setPicked([id]);
+      if (!deferred) onSubmit([id]);
       return;
     }
     setPicked((p) => {
@@ -430,14 +522,14 @@ function ChoiceInput({
 
   return (
     <>
-      {q.multi && !answered && <p className="small muted">Select all that apply, then check.</p>}
+      {q.multi && !locked && <p className="small muted">Select all that apply{deferred ? ', then save' : ', then check'}.</p>}
       <div className={`options${short ? ' options-short' : ''}`} role={q.multi ? 'group' : 'radiogroup'}>
         {q.options.map((o) => {
-          const isSel = shown.includes(o.id);
+          const isSel = picked.includes(o.id);
           const isCorrect = q.correct.includes(o.id);
           let cls = 'option';
           if (!q.multi) cls += ' option-radio';
-          if (answered) {
+          if (graded) {
             if (isCorrect) cls += ' is-correct';
             else if (isSel) cls += ' is-wrong';
           } else if (isSel) cls += ' is-selected';
@@ -447,26 +539,26 @@ function ChoiceInput({
               type="button"
               className={cls}
               onClick={() => toggle(o.id)}
-              disabled={answered}
+              disabled={locked}
               role={q.multi ? 'checkbox' : 'radio'}
               aria-checked={isSel}
-              aria-label={answered && o.note ? `${o.label}. ${o.note}` : o.label}
+              aria-label={graded && o.note ? `${o.label}. ${o.note}` : o.label}
             >
               <span className="option-mark" aria-hidden="true">
-                {answered && !isCorrect && isSel ? <IconCross size={14} /> : <IconCheck size={14} />}
+                {graded && !isCorrect && isSel ? <IconCross size={14} /> : <IconCheck size={14} />}
               </span>
               <span className="option-body">
                 <span className={`option-label${o.mono ? ' mono' : ''}`}>{o.label}</span>
-                {answered && o.note && <span className="option-note">{o.note}</span>}
+                {graded && o.note && <span className="option-note">{o.note}</span>}
               </span>
             </button>
           );
         })}
       </div>
-      {q.multi && !answered && (
+      {confirm && !locked && (
         <div className="actions">
           <button type="button" className="btn btn-primary" disabled={picked.length === 0} onClick={() => onSubmit(picked)}>
-            <IconCheck size={16} /> Check
+            <IconCheck size={16} /> {deferred ? 'Save answer' : 'Check'}
           </button>
         </div>
       )}
@@ -474,14 +566,15 @@ function ChoiceInput({
   );
 }
 
-function NumericInput({ q, locked, onSubmit }: { q: NumericQuestion; locked: boolean; onSubmit(v: number | null): void }) {
+function NumericInput({ q, locked, deferred, onSubmit }: InputProps & { q: NumericQuestion; onSubmit(v: number | null): void }) {
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Focus the box in practice mode only: an exam page has many of them.
   useEffect(() => {
-    inputRef.current?.focus({ preventScroll: true });
-  }, [q]);
+    if (!deferred) inputRef.current?.focus({ preventScroll: true });
+  }, [q, deferred]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -511,14 +604,14 @@ function NumericInput({ q, locked, onSubmit }: { q: NumericQuestion; locked: boo
       />
       <span className="muted">{q.unit}</span>
       <button type="submit" className="btn btn-primary" disabled={locked || !text.trim()}>
-        <IconCheck size={16} /> Check
+        <IconCheck size={16} /> {deferred ? 'Save' : 'Check'}
       </button>
       {error && <span className="input-error" role="alert">{error}</span>}
     </form>
   );
 }
 
-function OrderInput({ q, locked, onSubmit }: { q: OrderQuestion; locked: boolean; onSubmit(order: string[]): void }) {
+function OrderInput({ q, locked, deferred, onSubmit }: InputProps & { q: OrderQuestion; onSubmit(order: string[]): void }) {
   const [order, setOrder] = useState<string[]>([]);
   const label = (id: string) => q.items.find((i) => i.id === id)!.label;
   const remaining = q.items.filter((i) => !order.includes(i.id));
@@ -542,7 +635,7 @@ function OrderInput({ q, locked, onSubmit }: { q: OrderQuestion; locked: boolean
       </div>
       <div className="actions">
         <button type="button" className="btn btn-primary" disabled={locked || remaining.length > 0} onClick={() => onSubmit(order)}>
-          <IconCheck size={16} /> Check
+          <IconCheck size={16} /> {deferred ? 'Save' : 'Check'}
         </button>
         {order.length > 0 && !locked && (
           <button type="button" className="btn btn-ghost" onClick={() => setOrder([])}>

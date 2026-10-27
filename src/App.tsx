@@ -5,6 +5,7 @@ import { useTheme } from './lib/theme';
 import { BlotsMode, CloningMode, EndsMode, ExpressionMode, FunctionalMode, GelMode, NumbersMode, PcrMode } from './modes/QuizModes';
 import { Home } from './modes/Home';
 import { MappingMode } from './modes/MappingMode';
+import { MockExamMode } from './modes/MockExamMode';
 import { StatsScreen } from './modes/StatsScreen';
 import { TrueFalseMode } from './modes/TrueFalseMode';
 import { ProgressProvider, useProgress } from './state/ProgressContext';
@@ -57,6 +58,9 @@ function Shell() {
       break;
     case '/tf':
       page = <TrueFalseMode />;
+      break;
+    case '/exam':
+      page = <MockExamMode />;
       break;
     case '/stats':
       page = <StatsScreen />;

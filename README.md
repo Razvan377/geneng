@@ -26,6 +26,13 @@ expression vectors 11–14).
 next to the expected one. *Match*: assign samples to lanes. *Case problems*: one scenario, several parts answered in
 turn (for example the four blots of the same gene).
 
+**Mock exam.** A full seven-problem exam in the layout of the solved problem collection: cloning strategy,
+cloning with PCR primers, lab calculations, gene expression analysis (Southern / Northern / RT-PCR / Western),
+expression vectors, yeast two-hybrid and techniques. Every exam is generated from a new seed, so there is no limit
+on how many you can take. Answers are saved without feedback (and can be changed) until you press **Finish exam**;
+then every part is corrected and explained and you get a grade out of 10 with the per-problem breakdown. Past exams
+are listed with their grades and can be retaken.
+
 Every question shows the reasoning, not just right/wrong. Points, streaks, per-mode accuracy and a
 **weak spots** screen track what to practise next.
 
@@ -63,6 +70,7 @@ the seed is all you need to replay or share one. The seed is always in the URL:
 - `#/map?classic=B`: a Classic level (A, B or C)
 - `#/map?daily=2026-09-27`: the daily challenge. Its seed is the date, so everyone gets the same puzzle. Weekday dailies are medium, weekend dailies are hard.
 - `#/ends?type=recut&seed=abc`: a question of one type (drop `type` for a mix)
+- `#/exam?seed=q7w2pz`: a mock exam (open `#/exam` to start a new one or see your past exams)
 
 Each page has a **Copy link** button.
 
@@ -85,6 +93,7 @@ src/
     geneModel.ts      exons/introns/UTRs, EcoRI sites, probe, primers, epitope; variants → Southern/Northern/RT-PCR/Western
     translate.ts      genetic code, translation, 110 Da per amino acid
   quiz/             Question generators for modes 2–6, grading, scoring, statements loader
+    mockExam.ts       mock exam layout (seven problems from one seed) and exam grading
   state/            Safe localStorage wrapper, progress (points, streaks, stats)
   components/       Gel, map editor, question card, visuals (SVG)
   modes/            One page per mode, plus home and stats
@@ -185,5 +194,8 @@ Run `npm test` afterwards.
 
 - **Mapping**: 30 / 50 / 80 points for easy / medium / hard. Each hint costs 20% and each wrong check 10%, down to a floor of 20%. Exam mode pays 1.5× plus 1 point per 10 s left on the clock (8 min for medium, 12 min for hard). Showing the worked solution scores 0 and counts as a miss.
 - **Quiz questions**: 10 points, plus a streak bonus of up to +10. Gel estimates get partial credit: within 5% of the true size scores 10, within 10% scores 7 (both count as correct), within 20% scores 4.
+- **Mock exam**: every problem weighs the same; a problem's score is the average of its parts (partial credit
+  counts, unanswered parts score 0). The grade is out of 10, with the bands Suspès (< 5), Aprovat, Notable (≥ 7) and
+  Excel·lent (≥ 9). When you finish, every part also counts towards your stats and weak spots.
 - Stats are kept per question type. The weak-spots screen ranks types by smoothed accuracy (correct + 1) / (attempts + 2) once a type has at least 2 attempts.
 # geneng
