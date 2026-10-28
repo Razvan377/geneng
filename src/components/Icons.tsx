@@ -212,6 +212,15 @@ export const ModeGlyph = ({ mode, size = 28 }: { mode: string; size?: number }) 
           <path d="M15 8h5M17.5 5.5v5M15 16h5" />
         </Svg>
       );
+    case 'gt':
+      // A 2×2 payoff matrix with one cell ringed.
+      return (
+        <Svg size={size} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M12 3v18M3 12h18" />
+          <circle cx="16.5" cy="16.5" r="2.3" />
+        </Svg>
+      );
     default:
       return (
         <Svg size={size} strokeWidth={1.6}>

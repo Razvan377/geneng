@@ -304,7 +304,7 @@ export function ExamQuestionView({
 
 function answerText(q: SimpleQuestion, a: Answer | null): string {
   if (q.format === 'numeric') {
-    const yours = a?.format === 'numeric' && a.value !== null ? `${trimNumber(a.value, 4)} ${q.unit}` : '—';
+    const yours = a?.format === 'numeric' && a.value !== null ? `${trimNumber(a.value, 4)} ${q.unit}`.trim() : '—';
     return `Answer: ${q.answerLabel} (you said ${yours}).`;
   }
   if (q.format === 'order') {
@@ -599,7 +599,7 @@ function NumericInput({ q, locked, deferred, onSubmit }: InputProps & { q: Numer
         value={text}
         onChange={(e) => setText(e.target.value)}
         disabled={locked}
-        aria-label={`Answer in ${q.unit}`}
+        aria-label={q.unit ? `Answer in ${q.unit}` : 'Answer'}
         aria-invalid={error ? true : undefined}
       />
       <span className="muted">{q.unit}</span>

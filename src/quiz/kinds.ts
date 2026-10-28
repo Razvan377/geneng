@@ -1,6 +1,6 @@
 /** Question kinds (stats keys) and the modes they belong to. */
 
-export type ModeId = 'map' | 'ends' | 'pcr' | 'gel' | 'num' | 'blot' | 'clone' | 'expr' | 'func' | 'tf';
+export type ModeId = 'map' | 'ends' | 'pcr' | 'gel' | 'num' | 'blot' | 'clone' | 'expr' | 'func' | 'tf' | 'gt';
 
 export const MODES: Record<ModeId, { title: string; route: string; blurb: string }> = {
   map: {
@@ -53,9 +53,16 @@ export const MODES: Record<ModeId, { title: string; route: string; blurb: string
     route: 'tf',
     blurb: 'Exam statements in Spanish, with the reasoning.',
   },
+  gt: {
+    title: 'Game theory',
+    route: 'gt',
+    blurb: 'Dominance, IESDS, pure and mixed Nash equilibria, stories to bimatrices, Cournot, rationalizability.',
+  },
 };
 
-export const MODE_ORDER: ModeId[] = ['map', 'blot', 'clone', 'expr', 'ends', 'pcr', 'gel', 'func', 'num', 'tf'];
+/** Genetics modes, in the order the home page lists them. */
+export const GENETICS_MODES: ModeId[] = ['map', 'blot', 'clone', 'expr', 'ends', 'pcr', 'gel', 'func', 'num', 'tf'];
+export const MODE_ORDER: ModeId[] = [...GENETICS_MODES, 'gt'];
 
 export const KIND_LABELS: Record<string, string> = {
   'map.easy': 'Mapping · easy',
@@ -114,6 +121,18 @@ export const KIND_LABELS: Record<string, string> = {
   'func.rnai': 'RNAi target validation',
   'func.reporter': 'Reporter assays (promoter bashing)',
   'func.technique': 'Recognising techniques',
+  'gt.params': 'Games with parameters',
+  'gt.dominance': 'Dominated strategies',
+  'gt.iesds': 'Iterated elimination (IESDS)',
+  'gt.pure': 'Pure-strategy equilibria',
+  'gt.mixed': 'Mixed-strategy equilibria',
+  'gt.story': 'From a story to a bimatrix',
+  'gt.transfer': 'Side payments (α)',
+  'gt.selection': 'Payoff vs risk dominance',
+  'gt.rational': 'Rationalizability',
+  'gt.cournot': 'Cournot and Bertrand',
+  'gt.continuous': 'Continuous strategies',
+  'gt.theory': 'Theorems and definitions',
 };
 
 export function modeOf(kind: string): ModeId {

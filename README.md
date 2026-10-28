@@ -33,6 +33,26 @@ on how many you can take. Answers are saved without feedback (and can be changed
 then every part is corrected and explained and you get a grade out of 10 with the per-problem breakdown. Past exams
 are listed with their grades and can be retaken.
 
+## Game theory
+
+A second subject: **Game Theory and Economic Applications** (Tejada, UB) — static games of complete information.
+
+- **Mock midterm** (`#/gt-exam`): four problems worth 3 + 2 + 3 + 2 points, in the format of the October 2023 paper —
+  a symmetric 2×2 game with parameters (dominance conditions, equilibrium conditions, the indifference relation for a
+  given mix, recognising a prisoners’ dilemma / coordination / hawk–dove game, the mixed equilibrium formula) or a
+  prisoners’ dilemma with a side payment α; a numeric bimatrix with dominated strategies and iterated elimination (or
+  rationalizability with domination by a mixture); a story to turn into a bimatrix (ticket contest, hawk–dove, penalty
+  kicks, credit war, or payoff vs risk dominance); and a game with continuous strategies (double auction, cleaning the
+  street, crime and enforcement, splitting money, distance game, or Cournot / collusion / Bertrand). New payoffs and
+  parameters every time; graded out of 10 with the paper’s points.
+- **Practice by topic** (`#/gt`): the same twelve problem types one at a time, with immediate feedback. Corrections
+  underline best replies, strike out eliminated strategies, ring equilibria and draw best-response functions as in the
+  slides. Probabilities can be typed as fractions (`2/5`).
+
+All games are solved by `src/science/games.ts` (pure and mixed equilibria, strict/weak dominance, IESDS,
+never-best-responses, Pareto efficiency, risk thresholds, Cournot), tested against the examples in the slides and in
+problem set 1.
+
 Every question shows the reasoning, not just right/wrong. Points, streaks, per-mode accuracy and a
 **weak spots** screen track what to practise next.
 
@@ -71,6 +91,7 @@ the seed is all you need to replay or share one. The seed is always in the URL:
 - `#/map?daily=2026-09-27`: the daily challenge. Its seed is the date, so everyone gets the same puzzle. Weekday dailies are medium, weekend dailies are hard.
 - `#/ends?type=recut&seed=abc`: a question of one type (drop `type` for a mix)
 - `#/exam?seed=q7w2pz`: a mock exam (open `#/exam` to start a new one or see your past exams)
+- `#/gt?type=mixed&seed=abc`: a game theory question; `#/gt-exam?seed=q7w2pz`: a game theory mock midterm
 
 Each page has a **Copy link** button.
 
@@ -92,8 +113,11 @@ src/
     ends.ts           sticky/blunt ends, ligation, hybrid sites, schizomers, directional cloning, phosphatase
     geneModel.ts      exons/introns/UTRs, EcoRI sites, probe, primers, epitope; variants → Southern/Northern/RT-PCR/Western
     translate.ts      genetic code, translation, 110 Da per amino acid
+    games.ts          game theory: bimatrix games, dominance, IESDS, pure/mixed Nash, rationalizability, Cournot
   quiz/             Question generators for modes 2–6, grading, scoring, statements loader
     mockExam.ts       mock exam layout (seven problems from one seed) and exam grading
+    gameQuestions.ts  game theory question generators (twelve problem types)
+    gtExam.ts         game theory mock midterm (3 + 2 + 3 + 2 points)
   state/            Safe localStorage wrapper, progress (points, streaks, stats)
   components/       Gel, map editor, question card, visuals (SVG)
   modes/            One page per mode, plus home and stats
@@ -197,5 +221,7 @@ Run `npm test` afterwards.
 - **Mock exam**: every problem weighs the same; a problem's score is the average of its parts (partial credit
   counts, unanswered parts score 0). The grade is out of 10, with the bands Suspès (< 5), Aprovat, Notable (≥ 7) and
   Excel·lent (≥ 9). When you finish, every part also counts towards your stats and weak spots.
+- **Game theory midterm**: problems are weighted by their points on the paper (3, 2, 3, 2); within a problem every
+  part weighs the same.
 - Stats are kept per question type. The weak-spots screen ranks types by smoothed accuracy (correct + 1) / (attempts + 2) once a type has at least 2 attempts.
 # geneng

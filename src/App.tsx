@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import { IconAuto, IconChart, IconFlame, IconMoon, IconStar, IconSun } from './components/Icons';
 import { href, useRoute } from './lib/router';
 import { useTheme } from './lib/theme';
-import { BlotsMode, CloningMode, EndsMode, ExpressionMode, FunctionalMode, GelMode, NumbersMode, PcrMode } from './modes/QuizModes';
+import { BlotsMode, CloningMode, EndsMode, ExpressionMode, FunctionalMode, GameTheoryMode, GelMode, NumbersMode, PcrMode } from './modes/QuizModes';
 import { Home } from './modes/Home';
 import { MappingMode } from './modes/MappingMode';
-import { MockExamMode } from './modes/MockExamMode';
+import { GameTheoryExamMode, MockExamMode } from './modes/MockExamMode';
 import { StatsScreen } from './modes/StatsScreen';
 import { TrueFalseMode } from './modes/TrueFalseMode';
 import { ProgressProvider, useProgress } from './state/ProgressContext';
@@ -61,6 +61,12 @@ function Shell() {
       break;
     case '/exam':
       page = <MockExamMode />;
+      break;
+    case '/gt':
+      page = <GameTheoryMode />;
+      break;
+    case '/gt-exam':
+      page = <GameTheoryExamMode />;
       break;
     case '/stats':
       page = <StatsScreen />;

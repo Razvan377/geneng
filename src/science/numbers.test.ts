@@ -106,11 +106,17 @@ describe('parseNumber', () => {
     ['10^9', 1e9],
     ['2.5 x 10^-3', 2.5e-3],
     ['-3', -3],
+    ['−3', -3],
+    ['2/5', 0.4],
+    ['1 / 3', 1 / 3],
+    ['-3/4', -0.75],
+    ['−1/2', -0.5],
+    ['1,5/3', 0.5],
   ])('"%s" → %d', (input, expected) => {
     expect(parseNumber(input)).toBeCloseTo(expected, 6);
   });
 
-  it.each(['', 'abc', '2^30', '1..2', '10^'])('rejects "%s"', (input) => {
+  it.each(['', 'abc', '2^30', '1..2', '10^', '1/0', '1/2/3'])('rejects "%s"', (input) => {
     expect(parseNumber(input)).toBeNull();
   });
 

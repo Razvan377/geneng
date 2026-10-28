@@ -3,7 +3,9 @@ import { AGAROSE_TABLE, agaroseModel, LADDERS } from '../../science/gel';
 import { formatSize } from '../../quiz/gelQuestions';
 import type { Visual } from '../../quiz/types';
 import { Gel } from '../Gel';
+import { Bimatrix } from './Bimatrix';
 import { BlotView } from './BlotView';
+import { BrPlot } from './BrPlot';
 import { GeneDiagram } from './GeneDiagram';
 import { BarsChart, TableView, VectorView } from './Misc';
 import { ProbeMap } from './ProbeMap';
@@ -119,6 +121,21 @@ export function VisualView({ visual, guessBp = null }: Props) {
       return <BlotView look={visual.look} unit={visual.unit} ladder={visual.ladder} lanes={visual.lanes} caption={visual.caption} />;
     case 'table':
       return <TableView head={visual.head} rows={visual.rows} caption={visual.caption} />;
+    case 'bimatrix':
+      return (
+        <Bimatrix
+          players={visual.players}
+          rows={visual.rows}
+          cols={visual.cols}
+          cells={visual.cells}
+          marks={visual.marks}
+          rowProbs={visual.rowProbs}
+          colProbs={visual.colProbs}
+          caption={visual.caption}
+        />
+      );
+    case 'brPlot':
+      return <BrPlot {...visual} />;
     case 'stack':
       return (
         <div className="visual-stack">

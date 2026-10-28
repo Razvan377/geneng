@@ -69,7 +69,43 @@ export type Visual =
   | { type: 'bars'; unit: string; bars: { label: string; value: number; error?: number }[]; reference?: number; caption?: string }
   | { type: 'blot'; look: BlotLook; unit: BlotUnit; ladder: number[]; lanes: BlotLaneData[]; caption?: string }
   | { type: 'table'; head: string[]; rows: string[][]; caption?: string }
+  | {
+      type: 'bimatrix';
+      /** [row player, column player]. */
+      players: [string, string];
+      rows: string[];
+      cols: string[];
+      /** cells[r][c] = payoffs as text, one per player (strings so parameters like "a" or "y − α" work). */
+      cells: string[][][];
+      marks?: BimatrixMarks;
+      /** Probability labels shown next to the strategy names, e.g. "x", "1 − x". */
+      rowProbs?: string[];
+      colProbs?: string[];
+      caption?: string;
+    }
+  | {
+      type: 'brPlot';
+      xLabel: string;
+      yLabel: string;
+      xMax: number;
+      yMax: number;
+      xTicks: { at: number; label: string }[];
+      yTicks: { at: number; label: string }[];
+      /** Best-response curves as polylines in data coordinates. */
+      series: { label: string; tone: 'teal' | 'coral'; points: [number, number][] }[];
+      dots?: { x: number; y: number; label?: string }[];
+      caption?: string;
+    }
   | { type: 'stack'; items: Visual[] };
+
+export interface BimatrixMarks {
+  /** underline[r][c][i]: payoff i in cell (r, c) is a best response (the slides' underlining). */
+  underline?: boolean[][][];
+  struckRows?: number[];
+  struckCols?: number[];
+  /** Cells to ring (equilibria). */
+  ring?: [number, number][];
+}
 
 export type BlotLook = 'film' | 'coomassie' | 'agarose';
 export type BlotUnit = 'kb' | 'kDa';

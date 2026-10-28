@@ -139,7 +139,7 @@ function parseMantissa(raw: string): number | null {
 
 /**
  * Accepts "4096", "4 096", "65,536", "0,5", "1.07e9", "1.07E+9", "1.07x10^9", "1.07 × 10⁹",
- * "4,6·10^5", "10^9", "2^30" is NOT accepted (answers are numbers, not expressions).
+ * "4,6·10^5", "10^9", "2/5", "−3". "2^30" is NOT accepted (answers are numbers, not expressions).
  */
 export function parseNumber(input: string): number | null {
   if (typeof input !== 'string') return null;
@@ -147,6 +147,16 @@ export function parseNumber(input: string): number | null {
   if (!s) return null;
   s = s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+/g, (m) => '^' + [...m].map((c) => SUPERSCRIPT_DIGITS[c]).join(''));
   s = s.replace(/\s+/g, ' ');
+
+  // Simple fractions: "2/5", "-3/4" (probabilities in game theory).
+  const frac = s.match(/^([+−-]?)\s*(\d+(?:[.,]\d+)?)\s*\/\s*(\d+(?:[.,]\d+)?)$/);
+  if (frac) {
+    const n = parseMantissa(frac[2]);
+    const d = parseMantissa(frac[3]);
+    if (n === null || d === null || d === 0) return null;
+    return (frac[1] ? -1 : 1) * (n / d);
+  }
+  s = s.replace(/^−/, '-');
 
   const sci = s.match(/^(.*?)\s*(?:[x×*·]\s*)?10\s*\^\s*\(?([+-]?\d+)\)?$/);
   if (sci) {

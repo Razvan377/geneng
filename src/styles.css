@@ -2836,3 +2836,175 @@ select.input {
   justify-content: center;
   padding: 8px 0;
 }
+
+/* ---------- game theory: payoff matrices and best-response plots ---------- */
+
+.bimatrix-figure {
+  margin: 0;
+}
+
+.bimatrix {
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 4px auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.bimatrix th,
+.bimatrix td {
+  padding: 7px 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.bimatrix .bm-player {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.bimatrix .bm-player-side {
+  padding: 4px 2px;
+  width: 1.4em;
+}
+
+.bimatrix .bm-player-side span {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.bimatrix .bm-strategy {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.bimatrix thead .bm-strategy {
+  border-bottom: 1.5px solid var(--border-strong);
+}
+
+.bimatrix tbody .bm-strategy {
+  border-right: 1.5px solid var(--border-strong);
+  text-align: right;
+}
+
+.bimatrix .bm-prob {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.bimatrix tbody .bm-strategy .bm-prob {
+  display: inline;
+  margin-right: 4px;
+}
+
+.bimatrix .bm-cell {
+  font-family: var(--mono);
+  font-size: 0.92rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.bimatrix tbody tr:last-child .bm-cell {
+  border-bottom: none;
+}
+
+.bimatrix .bm-best {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--teal);
+  font-weight: 700;
+}
+
+.bimatrix .is-struck {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--coral);
+  opacity: 0.7;
+}
+
+.bimatrix .is-ringed {
+  background: var(--teal-tint);
+  box-shadow: inset 0 0 0 2px var(--teal);
+  border-radius: 8px;
+}
+
+.br-plot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+}
+
+.br-line {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.br-teal {
+  stroke: var(--teal);
+}
+
+.br-coral {
+  stroke: var(--coral);
+}
+
+.br-dot {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+.br-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--text-2);
+}
+
+.br-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.subject-title {
+  margin: 26px 2px 10px;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.subject-title .small {
+  font-weight: 500;
+}
+
+.home .gt-practice {
+  margin-top: 12px;
+}
+
+.gt-exam-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  color: inherit;
+  text-decoration: none;
+  border-left: 3px solid var(--teal);
+}
+
+.gt-exam-link:hover {
+  border-color: var(--teal);
+}
+
+.exam-points {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+}

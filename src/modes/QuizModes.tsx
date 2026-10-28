@@ -14,6 +14,7 @@ import { BLOT_KINDS, generateBlotQuestion } from '../quiz/blotQuestions';
 import { CLONING_KINDS, generateCloningQuestion } from '../quiz/cloningQuestions';
 import { EXPRESSION_KINDS, generateExpressionQuestion } from '../quiz/expressionQuestions';
 import { FUNCTIONAL_KINDS, generateFunctionalQuestion } from '../quiz/functionalQuestions';
+import { GAME_KINDS, generateGameQuestion } from '../quiz/gameQuestions';
 import type { Grade, Question } from '../quiz/types';
 import { randomSeed } from '../science/rng';
 import { useProgress } from '../state/ProgressContext';
@@ -23,9 +24,11 @@ interface QuizModeProps {
   kinds: readonly string[];
   generate(seed: string, kind?: string): Question;
   aside?: ReactNode;
+  /** Label of the chip that mixes every question type. */
+  allLabel?: string;
 }
 
-function QuizMode({ mode, kinds, generate, aside }: QuizModeProps) {
+function QuizMode({ mode, kinds, generate, aside, allLabel = 'Mixed' }: QuizModeProps) {
   const { params } = useRoute();
   const { progress, record } = useProgress();
   const meta = MODES[mode];
@@ -66,7 +69,7 @@ function QuizMode({ mode, kinds, generate, aside }: QuizModeProps) {
       <PageHeader title={meta.title} subtitle={meta.blurb} />
       <nav className="quiz-filter" aria-label="Question type" ref={filterRef}>
         <a className={`chip${kind ? '' : ' is-active'}`} href={href(path)} aria-current={kind ? undefined : 'page'}>
-          Mixed
+          {allLabel}
         </a>
         {kinds.map((k) => (
           <a key={k} className={`chip${kind === k ? ' is-active' : ''}`} href={href(path, { type: k })} aria-current={kind === k ? 'page' : undefined}>
@@ -100,6 +103,7 @@ const generators = {
   clone: (s: string, k?: string) => generateCloningQuestion(s, k as never),
   expr: (s: string, k?: string) => generateExpressionQuestion(s, k as never),
   func: (s: string, k?: string) => generateFunctionalQuestion(s, k as never),
+  gt: (s: string, k?: string) => generateGameQuestion(s, k as never),
 };
 
 export function EndsMode() {
@@ -167,4 +171,21 @@ export function ExpressionMode() {
 
 export function FunctionalMode() {
   return <QuizMode mode="func" kinds={FUNCTIONAL_KINDS} generate={generators.func} />;
+}
+
+export function GameTheoryMode() {
+  return (
+    <QuizMode
+      mode="gt"
+      kinds={GAME_KINDS}
+      generate={generators.gt}
+      allLabel="All topics"
+      aside={
+        <a className="card gt-exam-link" href={href('/gt-exam')}>
+          <strong>Mock midterm</strong>
+          <span className="muted small">Four problems, 10 points, corrected at the end — a new exam every time.</span>
+        </a>
+      }
+    />
+  );
 }

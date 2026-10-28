@@ -22,6 +22,8 @@ export interface ExamProblem {
   title: string;
   /** Where this kind of problem comes from in the course material. */
   source: string;
+  /** Points on the exam paper; when every problem has them, problems are weighted by points. */
+  points?: number;
   blocks: Question[];
 }
 
@@ -115,7 +117,7 @@ export function partKey(problem: number, block: number, part: number): string {
 }
 
 export interface ExamScore {
-  /** 0–10, one decimal, every problem weighted equally. */
+  /** 0–10, one decimal; problems weighted by their points, or equally when they have none. */
   grade: number;
   /** Per problem: fraction 0–1 (average score of its parts; unanswered parts count 0). */
   problems: number[];
@@ -142,7 +144,10 @@ export function scoreExam(exam: MockExam, grades: Readonly<Record<string, Grade>
     );
     return n ? sum / n : 0;
   });
-  const grade = Math.round((problems.reduce((a, b) => a + b, 0) / problems.length) * 100) / 10;
+  // Weighted by points when the paper gives them (e.g. 3 + 2 + 3 + 2), otherwise equally.
+  const weights = exam.problems.every((p) => p.points) ? exam.problems.map((p) => p.points!) : exam.problems.map(() => 1);
+  const total10 = (problems.reduce((sum, f, i) => sum + f * weights[i], 0) / weights.reduce((a, b) => a + b, 0)) * 10;
+  const grade = Math.round(total10 * 10) / 10;
   return { grade, problems, answered, total };
 }
 
